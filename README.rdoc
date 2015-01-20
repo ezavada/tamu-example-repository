@@ -1,28 +1,44 @@
 == README
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+Copyright 2015 Texas A & M University
 
-Things you may want to cover:
+This is a port to Rails of the PHP Example Repository for use with the AWL Editor
 
-* Ruby version
-
-* System dependencies
-
-* Configuration
-
-* Database creation
-
-* Database initialization
-
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
+Original License and PHP comments follow:
 
 
-Please feel free to use a different markup language if you do not plan to run
-<tt>rake doc:app</tt>.
+Copyright 2014 PRImA Research Lab, University of Salford, United Kingdom
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+
+This file is a sample index page, for the EMOP project.
+The purpose of this mock website is to provide access to the WebLayoutEditor.
+
+Important information
+* Each document has an ID. This is referred to as Did.
+* For each document, there can be any number of PAGE files. Each PAGE file
+  has it's own ID, referred to as Aid.
+* This index page, for every document contains links to specific attachments
+  (different versions of PAGE files perhaps).
+* This is implemented in such a way, so that it is possible to keep track of
+  changes/updates to the PAGE file, by storing each different version as a
+  new attachment (that has a different Aid, but is linked to the same Did.
+* The link to the gateway web page, includes the Aid, so that it can display
+  the correct version of the PAGE file. If the Did for the particular
+  document is required, you should ensure that your supporting database can
+  provide that.
+
+Under production circumstances, a lot of the data required for this page
+would be retrieved from a database. In order to simplify this example, all
+required data is stored in config.inc.php in various arrays.

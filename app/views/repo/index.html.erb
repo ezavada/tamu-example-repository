@@ -1,0 +1,30 @@
+<h1>Welcome to the WebLayoutEditor integration example [Rails version]</h1>
+
+
+<% @documents.each do |did, document| -%>
+<h2>This section contains links to the WebLayoutEditor for image <%= did %>. </h2>
+<table border="1">
+  <thead>
+  <tr><th rowspan="2">Aid</th><th colspan="3">WebLayoutEditor</th></tr>
+  <tr><th>[hosted on PRImA]</th><th>[using localhost]</th><th>[using localhost and debug]</th></tr>
+  </thead>
+  <tbody>
+  <% @attachments.each do |aid, attachment| -%>
+  <tr>
+    <td><%= aid %></td>
+    <td><a href="gateway/<%= aid %>">Click</a></td>
+    <td>
+      <% if CONFIG["enable_local_links"] -%>
+      <a href="gateway/<%= aid %>?uselocal=1">Click</a>
+      <% end -%>
+    </td>
+    <td>
+      <% if CONFIG["enable_debug_links"] -%>
+      <a href="gateway/<%= aid %>?usedebug=1">Click</a>
+      <% end -%>
+    </td>
+  </tr>
+  <% end -%>
+  </tbody>
+</table>
+<% end -%>

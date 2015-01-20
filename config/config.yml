@@ -1,0 +1,26 @@
+#
+# The following parameters are for the configuration of this sample website.
+# The URLs have to be ready to accept query string parameters.
+#
+
+# The AppId is used is unique for each integration of the WebLayoutEditor tool.
+# It is used by our server to recognise you and use the correct decryption key.
+# It should be different for each integration application.
+
+default: &default
+  app_id: tamu-emop
+  external_links_base_url: http://prima2.cse.salford.ac.uk:8080/WebLayoutEditor?
+  enable_local_links: true
+  local_links_base_url: http://localhost:8080/WebLayoutEditor.html?
+  enable_debug_links: true
+  debug_links_base_url: http://localhost:8080/WebLayoutEditor.html?gwt.codesvr=127.0.0.1:9997&
+
+development:
+  <<: *default
+
+test:
+  <<: *default
+
+production:
+  <<: *default
+  enableDebugLinks: false

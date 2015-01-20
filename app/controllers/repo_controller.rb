@@ -42,9 +42,20 @@
 # * would be retrieved from a database. In order to simplify this example, all
 # * required data is stored in config.inc.php in various arrays.
 
-
-class ApplicationController < ActionController::Base
-  # Prevent CSRF attacks by raising an exception.
-  # For APIs, you may want to use :null_session instead.
-  protect_from_forgery with: :exception
+class RepoController < ApplicationController
+  def index
+    repo_files = "#{Rails.root.to_s}/repository"
+    @documents = {}
+    @attachments = {};
+    files = Dir.glob("#{repo_files}/fullview/*")
+    files.each do |file|
+      id = File.basename(file)
+      @documents[id] = file
+    end
+    files = Dir.glob("#{repo_files}/attachments/*")
+    files.each do |file|
+      id = File.basename(file)
+      @attachments[id] = file
+    end
+  end
 end
