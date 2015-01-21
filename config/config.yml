@@ -11,9 +11,9 @@ default: &default
   app_id: tamu-emop
   external_links_base_url: http://prima2.cse.salford.ac.uk:8080/WebLayoutEditor?
   enable_local_links: true
-  local_links_base_url: http://localhost:8080/WebLayoutEditor.html?
+  local_links_base_url: http://localhost:8080/WebLayoutEditor?
   enable_debug_links: true
-  debug_links_base_url: http://localhost:8080/WebLayoutEditor.html?gwt.codesvr=127.0.0.1:9997&
+  debug_links_base_url: http://localhost:8080/WebLayoutEditor?gwt.codesvr=127.0.0.1:9997&
 
 development:
   <<: *default

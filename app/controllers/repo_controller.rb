@@ -42,6 +42,9 @@
 # * would be retrieved from a database. In order to simplify this example, all
 # * required data is stored in config.inc.php in various arrays.
 
+require 'openssl'
+require 'base64'
+
 class RepoController < ApplicationController
   def index
     repo_files = "#{Rails.root.to_s}/repository"
@@ -49,13 +52,63 @@ class RepoController < ApplicationController
     @attachments = {};
     files = Dir.glob("#{repo_files}/fullview/*")
     files.each do |file|
-      id = File.basename(file)
+      id = File.basename(file, File.extname(file))
       @documents[id] = file
     end
     files = Dir.glob("#{repo_files}/attachments/*")
     files.each do |file|
-      id = File.basename(file)
+      id = File.basename(file, File.extname(file))
       @attachments[id] = file
     end
+  end
+
+  # This method takes as parameter the Aid and generates the access URL for the
+  # WebLayoutEditor, which is being displayed inline.
+  def gateway
+    aid = CGI::unescape(params[:id])
+    did = get_document_id_for_attachment(aid)
+    # save our client ip
+    ip_addr = request.remote_ip
+    if ip_addr == '::1' || ip_addr == '0:0:0:0:0:0:0:1' || ip_addr == '0.0.0.0' || ip_addr == '127.0.0.1'
+        ip_addr = 'localhost'
+    end
+    @ip = ip_addr
+
+    # create the authentication token
+    secret_key = SECRETS['awl_shared_secret']
+    user_name = "user1"  # hardcoded, change to use actual username
+    auth_token = create_auth_token(ip_addr, user_name, secret_key)
+
+    # figure out the target url
+    url_base = CONFIG['external_links_base_url']
+    use_local = params[:uselocal].to_i
+    url_base = CONFIG['local_links_base_url'] if use_local == 1
+    use_debug  = params['usedebug'].to_i
+    url_base = CONFIG['debug_links_base_url'] if use_debug == 1
+    @use_debug = use_debug
+    @target_url = "#{url_base}Did=#{did}&Aid=#{aid}&Appid=#{CONFIG['app_id']}&a=#{auth_token}"
+  end
+
+  def get_document_id_for_attachment(aid)
+    return aid.split('.', 2).first
+  end
+
+  def create_auth_token(ip, user_name, secret_key)
+    time_now = Time.now.to_i
+    @token = "{\"ip\":\"#{ip}\",\"ts\":#{time_now},\"uid\":\"#{user_name}\"}"
+
+    # now encrypt the token in a way the WebLayoutEditor servlet can read
+    # Encrypt with 256 bit AES with CBC
+    cipher = OpenSSL::Cipher::Cipher.new('aes-128-cbc')
+    cipher.encrypt # We are encypting
+    # The OpenSSL library will generate random keys and IVs
+    cipher.key = Digest::MD5.digest(secret_key)
+    cipher.iv = cipher.random_iv
+
+    encrypted_data = cipher.update(@token) # Encrypt the data.
+    encrypted_data << cipher.final
+    encrypted_data = Base64.encode64(encrypted_data)
+    encrypted_data = CGI::escape(encrypted_data)
+    return encrypted_data
   end
 end

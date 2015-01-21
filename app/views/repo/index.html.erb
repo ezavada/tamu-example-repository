@@ -12,15 +12,17 @@
   <% @attachments.each do |aid, attachment| -%>
   <tr>
     <td><%= aid %></td>
-    <td><a href="gateway/<%= aid %>">Click</a></td>
+    <td>
+      <a href="<%= url_for :controller => 'repo', :action => 'gateway', :id => make_id(aid) %>">Click</a>
+    </td>
     <td>
       <% if CONFIG["enable_local_links"] -%>
-      <a href="gateway/<%= aid %>?uselocal=1">Click</a>
+      <a href="<%= url_for :controller => 'repo', :action => 'gateway', :id => make_id(aid) %>?uselocal=1">Click</a>
       <% end -%>
     </td>
     <td>
       <% if CONFIG["enable_debug_links"] -%>
-      <a href="gateway/<%= aid %>?usedebug=1">Click</a>
+          <a href="<%= url_for :controller => 'repo', :action => 'gateway', :id => make_id(aid) %>?usedebug=1">Click</a>
       <% end -%>
     </td>
   </tr>
