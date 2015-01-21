@@ -1,6 +1,10 @@
 <% if @use_debug == 1 -%>
 <p>ip: <%= @ip %></p>
 <p>token: <%= @token %></p>
+    <p>key: <%= @sk %></p>
+    <p>iv: <%= @iv %></p>
+<p>encrypted: <%= @step1 %></p>
+<p>base64: <%= @step2 %></p>
 <p>click to proceed: <a href="<%= @target_url %>"><%= @target_url %></a></p>
 <p><a href="javascript:history.go(-1);">Back</a></p>
 <% end -%>
@@ -11,4 +15,4 @@
   If you are seeing this, there is an error!</p>
 </object>
 
-<a href="<%= @target_url %>">CLICK</a></p>
+<!--<a href="<%= @target_url %>">CLICK</a></p>-->

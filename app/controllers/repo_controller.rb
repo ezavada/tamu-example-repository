@@ -95,19 +95,31 @@ class RepoController < ApplicationController
 
   def create_auth_token(ip, user_name, secret_key)
     time_now = Time.now.to_i
-    @token = "{\"ip\":\"#{ip}\",\"ts\":#{time_now},\"uid\":\"#{user_name}\"}"
+
+    @token = "{\"ip\":\"#{ip}\",\"ts\":\"#{time_now}\",\"uid\":\"#{user_name}\"}"
 
     # now encrypt the token in a way the WebLayoutEditor servlet can read
     # Encrypt with 256 bit AES with CBC
-    cipher = OpenSSL::Cipher::Cipher.new('aes-128-cbc')
+    cipher = OpenSSL::Cipher::Cipher.new('aes-256-cfb8')
     cipher.encrypt # We are encypting
     # The OpenSSL library will generate random keys and IVs
-    cipher.key = Digest::MD5.digest(secret_key)
-    cipher.iv = cipher.random_iv
+    real_key = Digest::MD5.hexdigest(secret_key)
+    cipher.padding = 0
+    cipher.key = real_key
+    iv = cipher.iv = cipher.random_iv
 
     encrypted_data = cipher.update(@token) # Encrypt the data.
     encrypted_data << cipher.final
+    encrypted_data = "#{iv}#{encrypted_data}"
+
+    @iv = iv
+    @sk = real_key.unpack('H*').join
+    @step1 = encrypted_data.unpack('H*').join
+
     encrypted_data = Base64.encode64(encrypted_data)
+
+    @step2 = encrypted_data
+
     encrypted_data = CGI::escape(encrypted_data)
     return encrypted_data
   end
