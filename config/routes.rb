@@ -1,12 +1,16 @@
 Rails.application.routes.draw do
   get 'repo/index'
   get 'repo/gateway/:id' => "repo#gateway"
+  get 'repo/fullview/:id' => "repo#fullview"
+  get 'repo/attachment' => "repo#attachment"
 
   # The priority is based upon order of creation: first created -> highest priority.
   # See how all your routes lay out with "rake routes".
 
   # You can have the root of your site routed with "root"
   root 'repo#index'
+
+  wash_out :soap
 
   # Example of regular route:
   #   get 'products/:id' => 'catalog#view'

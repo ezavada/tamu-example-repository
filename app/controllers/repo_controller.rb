@@ -44,17 +44,23 @@
 
 require 'openssl'
 require 'base64'
+require 'repo_utils'
 
 class RepoController < ApplicationController
+
+  include RepoUtils
+
   def index
     repo_files = "#{Rails.root.to_s}/repository"
     @documents = {}
-    @attachments = {};
+    @attachments = {}
+    # TODO: cache this with directory's name and modification date as key
     files = Dir.glob("#{repo_files}/fullview/*")
     files.each do |file|
       id = File.basename(file, File.extname(file))
       @documents[id] = file
     end
+    # TODO: cache this with directory's name and modification date as key
     files = Dir.glob("#{repo_files}/attachments/*")
     files.each do |file|
       id = File.basename(file, File.extname(file))
@@ -89,9 +95,25 @@ class RepoController < ApplicationController
     @target_url = "#{url_base}Did=#{did}&Aid=#{aid}&Appid=#{CONFIG['app_id']}&a=#{auth_token}"
   end
 
-  def get_document_id_for_attachment(aid)
-    return aid.split('.', 2).first
+  def fullview
+    path = find_document(params[:id])
+    if path.nil?
+      raise SOAPError, "No document for #{id} could be found"
+    end
+    send_file path
   end
+
+  def attachment
+    # return the attachment
+    path = "#{Rails.root.to_s}/repository/attachments/#{params[:id]}.xml"
+    send_file path, :content_type => "application/xml"
+  end
+
+
+
+  ##################################################################################################
+  # Utility functions
+  ##################################################################################################
 
   def create_auth_token(ip, user_name, secret_key)
     time_now = Time.now.to_i
@@ -123,4 +145,5 @@ class RepoController < ApplicationController
     encrypted_data = CGI::escape(encrypted_data)
     return encrypted_data
   end
+
 end

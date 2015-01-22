@@ -8,7 +8,7 @@
 # It should be different for each integration application.
 
 default: &default
-  app_id: tamu-emop
+  app_id: tamu-emop-rails
   external_links_base_url: http://prima2.cse.salford.ac.uk:8080/WebLayoutEditor?
   enable_local_links: true
   local_links_base_url: http://localhost:8080/WebLayoutEditor?
