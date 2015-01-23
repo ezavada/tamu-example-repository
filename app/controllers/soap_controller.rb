@@ -8,7 +8,9 @@ class SoapController < ApplicationController
   # SOAP interface
   ##################################################################################################
 
-  soap_service namespace: "TypeWright" #, wsse_auth_callback: ->(username, password) {
+  soap_service namespace: "www.primaresearch.org", :camelize_wsdl => :lower
+  # , :parser => :nokogiri,  # TODO: uncomment this to use faster nokogiri parser when used with TypeWright
+  # , wsse_auth_callback: ->(username, password) {
         # implement user check here for per-user auth
 #        return true
 #     }
@@ -21,17 +23,11 @@ class SoapController < ApplicationController
   # @param  string Uid Username
   # @param  string Aid Attachment ID
   # @return string     XML stream
-  soap_action "getDocumentAttachmentSources",
+  soap_action :get_document_attachment_sources,
               :args   =>  { :Uid => :string, :Aid => :string },
-              :return => :string,
-              to: :get_document_attachment_sources
+              :return => { :return => :string }
   def get_document_attachment_sources
 
-
-    # $Did = $DATA['Attachments'][$Aid]['Did'];
-    # $ATid = "PAGE";
-    # $urlFullViewJpeg = getFileURI($Uid, $Did, 'fullViewJPEG');
-    # $urlAttachment = getFileURI($Uid, $Aid, 'attachment');
 
     aid = params[:Aid]
     did = get_document_id_for_attachment(aid)
@@ -40,17 +36,17 @@ class SoapController < ApplicationController
     doc_type = "fullview"
     doc_url = url_for :controller => :repo, :action => :fullview, :id => did
 
-    result =
-"<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+    result = <<-XML
+<?xml version=\"1.0\" encoding=\"UTF-8\"?>
   <DocumentRepository>
     <DocumentAttachmentSources>
       <ImageSource documentId=\"#{did}\" type=\"#{doc_type}\">#{doc_url}</ImageSource>
       <AttachmentSource attachmentId=\"#{aid}\" type=\"#{attach_type}\">#{attach_url}</ImageSource>
     </DocumentAttachmentSources>
   </DocumentRepository>
-"
+XML
 
-    render :soap => result
+    render :soap => { :return => result }
   end
 
 
@@ -62,20 +58,20 @@ class SoapController < ApplicationController
   # @param  string Uid Username
   # @param  string Aid Attachment ID
   # @return string     XML stream
-  soap_action "getDocumentAttachmentPermissions",
+  soap_action :get_document_attachment_permissions,
               :args   =>  { :Uid => :string, :Aid => :string },
-              :return => :string,
-              to: :get_document_attachment_permissions
+              :return => { :return => :string }
   def get_document_attachment_permissions
     aid = params[:Aid]
-    result = "
+    result = <<-XML
 <?xml version=\"1.0\" encoding=\"UTF-8\"?>
 <DocumentRepository>
 	<DocumentAttachmentPermissions attachmentId=\"#{aid}\">
 		<Permission name=\"a\"/>
 	</DocumentAttachmentPermissions>
 </DocumentRepository>
-    "
+XML
+
     render :soap => result
   end
 
@@ -92,10 +88,9 @@ class SoapController < ApplicationController
   # @param  string     mode enum(new, overwrite)
   # @param  attachment base64 encoded content of new attachment
   # @return string     XML stream
-  soap_action "saveDocumentAttachment",
+  soap_action :save_document_attachment,
               :args   =>  { :Uid => :string, :Aid => :string, :mode => :string, :attachment => :base64Binary },
-              :return => :string,
-              :to => :save_document_attachment
+              :return => {:return => :string}
   def save_document_attachment
     raise SOAPError, "not implemented"
   end
