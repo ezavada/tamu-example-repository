@@ -8,10 +8,10 @@ class SoapController < ApplicationController
   # SOAP interface
   ##################################################################################################
 
-  soap_service namespace: "TypeWright", wsse_auth_callback: ->(username, password) {
+  soap_service namespace: "TypeWright" #, wsse_auth_callback: ->(username, password) {
         # implement user check here for per-user auth
-        return true
-     }
+#        return true
+#     }
 
   # Returns XML with source URIs for WebLayoutEditor
   #
@@ -22,7 +22,7 @@ class SoapController < ApplicationController
   # @param  string Aid Attachment ID
   # @return string     XML stream
   soap_action "getDocumentAttachmentSources",
-              :args   =>  { :uid => :string, :aid => :string },
+              :args   =>  { :Uid => :string, :Aid => :string },
               :return => :string,
               to: :get_document_attachment_sources
   def get_document_attachment_sources
@@ -32,31 +32,25 @@ class SoapController < ApplicationController
     # $ATid = "PAGE";
     # $urlFullViewJpeg = getFileURI($Uid, $Did, 'fullViewJPEG');
     # $urlAttachment = getFileURI($Uid, $Aid, 'attachment');
-    #
-    # $xml = new XMLWriter();
-    # $xml->openMemory();
-    # $xml->setIndent(true);
-    # $xml->setIndentString("\t");
-    # $xml->startDocument('1.0', 'utf-8');
-    # $xml->startElement("DocumentRepository");
-    # $xml->startElement("DocumentAttachmentSources");
-    # $xml->startElement("ImageSource");
-    # $xml->writeAttribute("documentId", $Did);
-    # $xml->writeAttribute("type", "fullview");
-    # $xml->text("$urlFullViewJpeg");
-    # $xml->endElement();
-    # $xml->startElement("AttachmentSource");
-    # $xml->writeAttribute("attachmentId", $Aid);
-    # $xml->writeAttribute("attachmentTypeId", $ATid);
-    # $xml->text("$urlAttachment");
-    # $xml->endElement();
-    # $xml->endElement();
-    # $xml->endElement();
-    # $xml->endDocument();
 
-    Rails.application..get_document
+    aid = params[:Aid]
+    did = get_document_id_for_attachment(aid)
+    attach_type = "PAGE"
+    attach_url = url_for :controller => :repo, :action => :attachment, :id => aid
+    doc_type = "fullview"
+    doc_url = url_for :controller => :repo, :action => :fullview, :id => did
 
-    render :soap => params[:uid].to_s
+    result =
+"<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+  <DocumentRepository>
+    <DocumentAttachmentSources>
+      <ImageSource documentId=\"#{did}\" type=\"#{doc_type}\">#{doc_url}</ImageSource>
+      <AttachmentSource attachmentId=\"#{aid}\" type=\"#{attach_type}\">#{attach_url}</ImageSource>
+    </DocumentAttachmentSources>
+  </DocumentRepository>
+"
+
+    render :soap => result
   end
 
 
@@ -69,11 +63,20 @@ class SoapController < ApplicationController
   # @param  string Aid Attachment ID
   # @return string     XML stream
   soap_action "getDocumentAttachmentPermissions",
-              :args   =>  { :uid => :string, :aid => :string },
+              :args   =>  { :Uid => :string, :Aid => :string },
               :return => :string,
               to: :get_document_attachment_permissions
   def get_document_attachment_permissions
-    raise SOAPError, "not implemented"
+    aid = params[:Aid]
+    result = "
+<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<DocumentRepository>
+	<DocumentAttachmentPermissions attachmentId=\"#{aid}\">
+		<Permission name=\"a\"/>
+	</DocumentAttachmentPermissions>
+</DocumentRepository>
+    "
+    render :soap => result
   end
 
   # Returns XML with source URIs for WebLayoutEditor
@@ -90,7 +93,7 @@ class SoapController < ApplicationController
   # @param  attachment base64 encoded content of new attachment
   # @return string     XML stream
   soap_action "saveDocumentAttachment",
-              :args   =>  { :uid => :string, :aid => :string, :mode => :string, :attachment => :base64Binary },
+              :args   =>  { :Uid => :string, :Aid => :string, :mode => :string, :attachment => :base64Binary },
               :return => :string,
               :to => :save_document_attachment
   def save_document_attachment
