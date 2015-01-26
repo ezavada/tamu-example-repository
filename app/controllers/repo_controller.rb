@@ -150,21 +150,27 @@ class RepoController < ApplicationController
     did = get_document_id_for_attachment(aid)
     attach_type = 'PAGE'
     attach_url = url_for :controller => :repo, :action => :attachment, :id => aid
-    # TODO: actually save the changes
-    json = { :did => did, :aid => aid, :attype => attach_type, :aturl => attach_url }.to_json
+
+    return_code = 0
+    return_message = ''
+    path = "#{Rails.root.to_s}/repository/attachments/#{aid}.xml"
+    File.open("/Users/my_home_directory/#{path}", "w+") {|f| f.write(@thing)}
+
+    #TODO: handle write failure
+
+    json = { :did => did, :aid => aid,
+             :attype => attach_type, :aturl => attach_url,
+             :returncode => return_code, :returnmessage => return_message
+           }.to_json
     render json: json
   end
 
+
   def attachment_new
-    # TODO: get doc and attachment ids from data, then actually save the data
-    uid = params[:uid]
-#    aid = params[:aid]
-#    did = get_document_id_for_attachment(aid)
-    # attach_type = 'PAGE'
-    # attach_url = url_for :controller => :repo, :action => :attachment, :id => aid
-    # json = { :did => did, :aid => aid, :attype => attach_type, :aturl => attach_url }.to_json
-    # render json: json
+    # implement if we ever need to do this with REST POST (Create) semantics, that is, where
+    # we don't already know the attachment ID and need it returned to us
   end
+
 
   ##################################################################################################
   # Utility functions

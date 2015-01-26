@@ -20,7 +20,7 @@
  * The followig parameters are for the configuration of this converter script.
  */
  
-$RAILS_BASE_URL = "http://localhost:3000/repo";
+$RAILS_BASE_URL = "http://127.0.0.1:3000/repo";
 
 /*
  * Makes a document or attachment id safe for sending to rails by urlencoding it then 
@@ -29,7 +29,7 @@ $RAILS_BASE_URL = "http://localhost:3000/repo";
 function urlSafeId($id)
 {
 	$result = urlencode($id);
-	$result = str_replace($result, '.', '%2E');
+	$result = str_replace('.', '%2E', $result);
 	return $result;
 }
 
@@ -46,30 +46,35 @@ function urlSafeId($id)
 function getDocumentAttachmentSources($Uid, $Aid) {
     global $RAILS_BASE_URL;
     
-    $service_url = $RAILS_BASE_URL.'/attachment/'.urlSafeId($Uid).'/'.urlSafeId($Aid);
+    $service_url = $RAILS_BASE_URL.'/attachment/src/'.urlSafeId($Uid).'/'.urlSafeId($Aid);
     $curl = curl_init($service_url);
 
-    error_log ( 'getDocumentAttachmentSources for '.$Uid.' :: '.$Aid );
-
-    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
     $curl_response = curl_exec($curl);
+    $curl_errno = curl_errno($curl);
+    $curl_err = curl_error($curl);
     curl_close($curl);
  
-    error_log ( 'getDocumentAttachmentSources response '.$curl_response );
+    if ($curl_errno) {
+        error_log ( 'getDocumentAttachmentSources for '.$Uid.' :: '.$Aid );
+        error_log ( 'REST Query: GET '.$service_url );
+        error_log ( 'getDocumentAttachmentSources response (errno: '.$curl_errno.': '.$curl_err .")\n ".$curl_response );
+        throw new SoapFault('Server', 'CURL ERROR'. $curl_errno.': '.$curl_err);
+    }
 
     $result = json_decode($curl_response);
     
-    error_log ( 'getDocumentAttachmentSources JSON: '. print_r($result, TRUE) );
+//    error_log ( 'getDocumentAttachmentSources JSON: '. print_r($result, TRUE) );
 
     
-    $Did = $result['did'];
-    $Aid = $result['aid'];
-    $ATid = $result['attype'];
-    $urlFullViewJpeg = $result['viewurl'];
-    $urlAttachment = $result['aturl'];
+    $Did = $result->{'did'};
+    $Aid = $result->{'aid'};
+    $ATid = $result->{'attype'};
+    $urlFullViewJpeg = $result->{'viewurl'};
+    $urlAttachment = $result->{'aturl'};
        
        
-    error_log ( 'getDocumentAttachmentSources urlAttachment: '. print_r($urlAttachment, TRUE) );
+//    error_log ( 'getDocumentAttachmentSources urlAttachment: '. print_r($urlAttachment, TRUE) );
 
 	$xml = new XMLWriter();
 	$xml->openMemory();
@@ -93,7 +98,7 @@ function getDocumentAttachmentSources($Uid, $Aid) {
 	$xml->endDocument();
 
     $xmlOut = $xml->outputMemory(TRUE);
-    error_log ( 'getDocumentAttachmentSources XML response: '. print_r($xmlOut, TRUE) );
+//    error_log ( 'getDocumentAttachmentSources XML response: '. print_r($xmlOut, TRUE) );
     
 	return $xmlOut;
 }
@@ -111,24 +116,32 @@ function getDocumentAttachmentSources($Uid, $Aid) {
 function getDocumentAttachmentPermissions($Uid, $Aid) {
     global $RAILS_BASE_URL;
 
-    $service_url = $RAILS_BASE_URL.'/attachment/'.urlSafeId($Uid).'/'.urlSafeId($Aid);
+    $service_url = $RAILS_BASE_URL.'/attachment/perm/'.urlSafeId($Uid).'/'.urlSafeId($Aid);
     $curl = curl_init($service_url);
     
-    error_log ( 'getDocumentAttachmentPermissions for '.$Uid.' :: '.$Aid );
-
-    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+//    curl_setopt($curl, CURLOPT_HEADER, 1);
     $curl_response = curl_exec($curl);
+    $curl_errno = curl_errno($curl);
+    $curl_err = curl_error($curl);
     curl_close($curl);
  
-    error_log ( 'getDocumentAttachmentPermissions response '.$curl_response );
+    if ($curl_errno) {
+        error_log ( 'getDocumentAttachmentPermissions for '.$Uid.' :: '.$Aid );
+        error_log ( 'REST Query: GET '.$service_url );
+        error_log ( 'getDocumentAttachmentSources response (errno: '.$curl_errno.': '.$curl_err .")\n ".$curl_response );
+        header("HTTP/1.0 500 Internal Server Error");
+        throw new SoapFault('Server', 'CURL ERROR'. $curl_errno.': '.$curl_err);
+    }
+
 
     $result = json_decode($curl_response);
 
-    error_log ( 'getDocumentAttachmentPermissions JSON: '. print_r($result, TRUE) );
+//    error_log ( 'getDocumentAttachmentPermissions JSON: '. print_r($result, TRUE) );
 
-    $Did = $result['did'];
-    $Aid = $result['aid'];
-    $permission = $result['permissions'];
+    $Did = $result->{'did'};
+    $Aid = $result->{'aid'};
+    $permission = $result->{'permissions'};
 
 	$xml = new XMLWriter();
 	$xml->openMemory();
@@ -165,45 +178,39 @@ function getDocumentAttachmentPermissions($Uid, $Aid) {
  */
 function saveDocumentAttachment($Uid, $Aid, $mode, $attachment) {
     global $RAILS_BASE_URL;
-
+    
     $service_url = $RAILS_BASE_URL.'/attachment/'.urlSafeId($Uid).'/'.urlSafeId($Aid);
     $curl = curl_init($service_url);
-       $curl_post_data = array(
-            "user_id" => 42,
-            "emailaddress" => 'lorna@example.com',
-            );
-       curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-       curl_setopt($curl, CURLOPT_POST, true);
-       curl_setopt($curl, CURLOPT_POSTFIELDS, $curl_post_data);
-       $curl_response = curl_exec($curl);
-       curl_close($curl);
- 
-       $xml = new SimpleXMLElement($curl_response);	
 
+    error_log ( 'saveDocumentAttachment for '.$Uid.' :: '.$Aid.' mode='.$mode );
 
-	$Did = $DATA['Attachments'][$Aid]['Did'];
-	$ATid = "PAGE";
-	$returnCode = 0;
-	$returnMessage = "";
+    $curl_post_data = array(
+        "mode" => $mode,
+        "attachment_data" => $attachment
+        );
+    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($curl, CURLOPT_PUT, true);
+    curl_setopt($curl, CURLOPT_POSTFIELDS, $curl_post_data);
+    $curl_response = curl_exec($curl);
+    $curl_errno = curl_errno($curl);
+    $curl_err = curl_error($curl);
+    curl_close($curl);
 
-	switch ($mode) {
-		case "new":
-			$AidNEW = $Aid . "." . date("Y-m-d-H-i-s", time());
-			$urlAttachmentNEW = "repository/attachments/" . $AidNEW . ".xml";
-			$pathNEW = __DIR__ . "/../" . $urlAttachmentNEW;
-			$content = $attachment;
+    if ($curl_errno) {
+        error_log ( 'saveDocumentAttachment for '.$Uid.' :: '.$Aid.' mode='.$mode  );
+        error_log ( 'REST Query: PUT '.$service_url );
+        error_log ( 'getDocumentAttachmentSources response (errno: '.$curl_errno.': '.$curl_err .")\n ".$curl_response );
+        throw new SoapFault('Server', 'CURL ERROR'. $curl_errno.': '.$curl_err);
+    }
 
-			break;
-		case "overwrite":
-			$pathNEW = __DIR__ . "/../" . $DATA['Attachments'][$Aid]['path'];
-			break;
-	}
-	$file_put_contents_Result = file_put_contents($pathNEW, $content);
-	if ($file_put_contents_Result === FALSE) {
-		//failed
-		$returnCode = "1";
-		$returnMessage = "Error when creating file (Got back error from file_put_contents: $file_put_contents_Result)";
-	}
+    $result = json_decode($curl_response);
+    
+    $Did = $result->{'did'};
+    $Aid = $result->{'aid'};
+    $ATid = $result->{'attype'};
+    $urlAttachment = $result->{'aturl'};
+	$returnCode = $result->{'returncode'};
+	$returnMessage = $result->{'returnmessage'};
 
 	$xml = new XMLWriter();
 	$xml->openMemory();
