@@ -96,6 +96,7 @@ class RepoController < ApplicationController
   end
 
   def fullview
+    # TODO: for security, look for an auth token and check that it is valid
     path = find_document(params[:id])
     if path.nil?
       raise SOAPError, "No document for #{id} could be found"
@@ -116,12 +117,15 @@ class RepoController < ApplicationController
   # @param  string Aid Attachment ID
   # @return string     XML stream
   def attachment_sources
-    did = params[:did]
+    uid = params[:uid]
     aid = params[:aid]
+    did = get_document_id_for_attachment(aid)
     attach_type = 'PAGE'
     attach_url = url_for :controller => :repo, :action => :attachment, :id => aid
     doc_type = 'fullview'
     doc_url = url_for :controller => :repo, :action => :fullview, :id => did
+
+    # TODO: for security, add an auth token to the full view url
 
     json = { :did => did, :aid => aid,
              :attype => attach_type, :aturl => attach_url,
@@ -131,8 +135,9 @@ class RepoController < ApplicationController
   end
 
   def attachment_permissions
-    did = params[:did]
+    uid = params[:uid]
     aid = params[:aid]
+    did = get_document_id_for_attachment(aid)
     json = { :did => did, :aid => aid,
              :permissions => 'a' }.to_json
 
@@ -140,8 +145,9 @@ class RepoController < ApplicationController
   end
 
   def attachment_save
-    did = params[:did]
+    uid = params[:uid]
     aid = params[:aid]
+    did = get_document_id_for_attachment(aid)
     attach_type = 'PAGE'
     attach_url = url_for :controller => :repo, :action => :attachment, :id => aid
     # TODO: actually save the changes
@@ -151,8 +157,9 @@ class RepoController < ApplicationController
 
   def attachment_new
     # TODO: get doc and attachment ids from data, then actually save the data
-    # did = params[:did]
-    # aid = params[:aid]
+    uid = params[:uid]
+#    aid = params[:aid]
+#    did = get_document_id_for_attachment(aid)
     # attach_type = 'PAGE'
     # attach_url = url_for :controller => :repo, :action => :attachment, :id => aid
     # json = { :did => did, :aid => aid, :attype => attach_type, :aturl => attach_url }.to_json
