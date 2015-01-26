@@ -3,6 +3,10 @@ Rails.application.routes.draw do
   get 'repo/gateway/:id' => "repo#gateway"
   get 'repo/fullview/:id' => "repo#fullview"
   get 'repo/attachment' => "repo#attachment"
+  get 'repo/attachment/src/:did/:aid' => "repo#attachment_sources"
+  get 'repo/attachment/perm/:did/:aid' => "repo#attachment_permissions"
+  put 'repo/attachment/:did/:aid' => "repo#attachment_save"
+  post 'repo/attachment' => "repo#attachment_new"
 
   # The priority is based upon order of creation: first created -> highest priority.
   # See how all your routes lay out with "rake routes".

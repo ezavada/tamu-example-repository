@@ -109,7 +109,55 @@ class RepoController < ApplicationController
     send_file path, :content_type => "application/xml"
   end
 
+  # Returns XML with source URIs for WebLayoutEditor
+  #
+  # @copyright PRImA June 2013
+  # @param  string Uid Username
+  # @param  string Aid Attachment ID
+  # @return string     XML stream
+  def attachment_sources
+    did = params[:did]
+    aid = params[:aid]
+    attach_type = 'PAGE'
+    attach_url = url_for :controller => :repo, :action => :attachment, :id => aid
+    doc_type = 'fullview'
+    doc_url = url_for :controller => :repo, :action => :fullview, :id => did
 
+    json = { :did => did, :aid => aid,
+             :attype => attach_type, :aturl => attach_url,
+             :viewurl => doc_url, :viewtype => doc_type }.to_json
+
+    render json: json
+  end
+
+  def attachment_permissions
+    did = params[:did]
+    aid = params[:aid]
+    json = { :did => did, :aid => aid,
+             :permissions => 'a' }.to_json
+
+    render json: json
+  end
+
+  def attachment_save
+    did = params[:did]
+    aid = params[:aid]
+    attach_type = 'PAGE'
+    attach_url = url_for :controller => :repo, :action => :attachment, :id => aid
+    # TODO: actually save the changes
+    json = { :did => did, :aid => aid, :attype => attach_type, :aturl => attach_url }.to_json
+    render json: json
+  end
+
+  def attachment_new
+    # TODO: get doc and attachment ids from data, then actually save the data
+    # did = params[:did]
+    # aid = params[:aid]
+    # attach_type = 'PAGE'
+    # attach_url = url_for :controller => :repo, :action => :attachment, :id => aid
+    # json = { :did => did, :aid => aid, :attype => attach_type, :aturl => attach_url }.to_json
+    # render json: json
+  end
 
   ##################################################################################################
   # Utility functions
@@ -145,5 +193,6 @@ class RepoController < ApplicationController
     encrypted_data = CGI::escape(encrypted_data)
     return encrypted_data
   end
+
 
 end

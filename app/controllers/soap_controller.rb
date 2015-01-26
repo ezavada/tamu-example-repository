@@ -46,7 +46,7 @@ class SoapController < ApplicationController
   </DocumentRepository>
 XML
 
-    render :soap => { :return => result }
+    render :soap => "This is a test" #{ :return => result.strip }
   end
 
 
@@ -72,7 +72,7 @@ XML
 </DocumentRepository>
 XML
 
-    render :soap => result
+    render :soap => result.strip
   end
 
   # Returns XML with source URIs for WebLayoutEditor
